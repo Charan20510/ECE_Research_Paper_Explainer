@@ -35,10 +35,14 @@ class UploadPaperView(View):
                 paper.extracted_text = cleaned
                 paper.save()
 
-                # persist extracted content to disk for later stages or auditing
+                # run stage 2 section segmentation
+                from .segmentation import detect_sections
+                sections_dict = detect_sections(cleaned)
+
+                # persist extracted content and segmented JSON to disk
                 from .utils import save_extracted_content
                 try:
-                    save_extracted_content(paper, cleaned)
+                    save_extracted_content(paper, cleaned, sections_dict)
                 except Exception:
                     # don't break the upload if filesystem writes fail; log could be added
                     pass

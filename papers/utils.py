@@ -73,13 +73,13 @@ def clean_text_pipeline(raw_text: str) -> str:
     return cleaned
 
 
-def save_extracted_content(paper, text: str):
+def save_extracted_content(paper, text: str, sections_dict: dict = None):
     """Persist extracted text as .txt and .json files on disk.
 
     Creates a directory under the project root `extracted_content/` using a
     sanitized name derived from the paper title (falling back to the PK).
-    The folder will contain `text.txt` and `data.json` so downstream stages or
-    external tools can consume the raw OCR/parsed output.
+    The folder will contain `text.txt`, `data.json`, and `sections.json` so downstream 
+    stages or external tools can consume the raw OCR/parsed output.
     """
     from django.conf import settings
     from django.utils.text import slugify
@@ -100,8 +100,15 @@ def save_extracted_content(paper, text: str):
 
     folder = root / slug
     # if folder exists, we might want to append PK to ensure uniqueness
-    if folder.exists():
-        folder = root / f"{slug}_{paper.pk}"
+    if folder.exists() and not (folder / 'text.txt').exists():
+        # If it's a completely clean folder from another thread it might be empty, but 
+        # normally we just reuse it or append PK if it belongs to a different paper.
+        pass
+    else:
+        # Just to be safe, append PK if it exists but might conflict
+        if folder.exists():
+            folder = root / f"{slug}_{paper.pk}"
+            
     folder.mkdir(exist_ok=True)
 
     # write text file
@@ -109,7 +116,7 @@ def save_extracted_content(paper, text: str):
     with open(txt_path, 'w', encoding='utf-8') as f:
         f.write(text)
 
-    # write json file
+    # write main data json (title, raw text)
     data = {
         'title': paper.title,
         'extracted_text': text,
@@ -117,3 +124,9 @@ def save_extracted_content(paper, text: str):
     json_path = folder / 'data.json'
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+        
+    # write sections file
+    if sections_dict:
+        sections_path = folder / 'sections.json'
+        with open(sections_path, 'w', encoding='utf-8') as f:
+            json.dump(sections_dict, f, ensure_ascii=False, indent=2)
