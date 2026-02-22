@@ -41,14 +41,17 @@ def extract_text_from_pdf(file_path: str) -> str:
                     text_content.append(page.get_text())
             return "\n".join(text_content)
 
-    # use pdfplumber path
-    text_content = []
-    with pdfplumber.open(file_path) as pdf:
-        for page in pdf.pages:
-            # `extract_text()` may return None for empty pages
-            txt = page.extract_text() or ""
-            text_content.append(txt)
-    return "\n".join(text_content)
+    try:
+        # use pdfplumber path
+        text_content = []
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                # `extract_text()` may return None for empty pages
+                txt = page.extract_text() or ""
+                text_content.append(txt)
+        return "\n".join(text_content)
+    except Exception as e:
+        raise ValueError(f"Failed to read PDF file: {e}")
 
 
 def clean_text_pipeline(raw_text: str) -> str:
@@ -78,14 +81,14 @@ def save_extracted_content(paper, text: str):
     The folder will contain `text.txt` and `data.json` so downstream stages or
     external tools can consume the raw OCR/parsed output.
     """
-    # avoid circular import at top
+    from django.conf import settings
     from django.utils.text import slugify
-    from pathlib import Path
     import json
+    import os
 
-    base_dir = Path(__file__).resolve().parent.parent
-    root = base_dir / 'extracted_content'
-    root.mkdir(exist_ok=True)
+    # Use Django's configured MEDIA_ROOT for stored content instead of hardcoded paths
+    root = settings.MEDIA_ROOT / 'extracted_content'
+    root.mkdir(parents=True, exist_ok=True)
 
     # choose directory name
     if paper.title:

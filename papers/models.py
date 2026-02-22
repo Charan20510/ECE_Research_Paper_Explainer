@@ -23,5 +23,6 @@ class UploadedPaper(models.Model):
     def save(self, *args, **kwargs):
         # override save to automatically set title if missing
         if not self.title and self.file:
-            self.title = self.file.name
+            import os
+            self.title = os.path.basename(self.file.name)
         super().save(*args, **kwargs)

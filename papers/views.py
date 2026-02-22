@@ -27,23 +27,29 @@ class UploadPaperView(View):
         context = {'form': form}
         if form.is_valid():
             paper: UploadedPaper = form.save()
-            # extract and clean text immediately after saving
-            file_path = paper.file.path
-            raw_text = extract_text_from_pdf(file_path)
-            cleaned = clean_text_pipeline(raw_text)
-            paper.extracted_text = cleaned
-            paper.save()
-
-            # persist extracted content to disk for later stages or auditing
-            from .utils import save_extracted_content
             try:
-                save_extracted_content(paper, cleaned)
-            except Exception:
-                # don't break the upload if filesystem writes fail; log could be added
-                pass
+                # extract and clean text immediately after saving
+                file_path = paper.file.path
+                raw_text = extract_text_from_pdf(file_path)
+                cleaned = clean_text_pipeline(raw_text)
+                paper.extracted_text = cleaned
+                paper.save()
 
-            context['message'] = '✅ Upload successful!'
-            context['saved'] = paper
+                # persist extracted content to disk for later stages or auditing
+                from .utils import save_extracted_content
+                try:
+                    save_extracted_content(paper, cleaned)
+                except Exception:
+                    # don't break the upload if filesystem writes fail; log could be added
+                    pass
+
+                context['message'] = '✅ Upload successful!'
+                context['saved'] = paper
+            except Exception as e:
+                # If extraction fails (e.g., malformed PDF), delete the paper record
+                # and physical file to prevent orphaned entries
+                paper.delete()
+                context['message'] = f'❌ Error processing PDF: {str(e)}'
         else:
             context['message'] = '⚠️ Please correct the errors below.'
         return render(request, self.template_name, context)
