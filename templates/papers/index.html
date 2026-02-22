@@ -1,0 +1,57 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Document Extractor - Upload</title>
+  <link rel="stylesheet" href="{% static 'uploader/style.css' %}">
+</head>
+
+<body>
+  <div class="container">
+    <h1>📄 Document Extractor</h1>
+    <p class="subtitle">Upload your PDF or documents to extract and analyze content</p>
+
+    <form method="post" enctype="multipart/form-data" class="upload-form">
+      {% csrf_token %}
+      <div id="drop-area" class="drop-area">
+        <p class="lead">📤 Drop your files here</p>
+        <p class="hint">Supported: PDF, Images, Word, Text documents</p>
+        <div class="drop-content">
+          <label class="btn" id="pick-file-label">
+            📁 Browse & Upload
+            <input id="file-input" type="file" name="file" accept="application/pdf,image/*,.doc,.docx,.txt" hidden multiple>
+          </label>
+        </div>
+        <div id="file-name" class="file-name" aria-live="polite"></div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">✨ Extract & Submit</button>
+      </div>
+    </form>
+
+    {% if message %}
+    <div class="notice">{{ message }}</div>
+    {% endif %}
+
+    {% if saved %}
+    <div class="result">
+      <h3>✅ Upload Successful</h3>
+      {% if saved.file %}
+      <p><strong>File:</strong> <a href="{{ saved.file.url }}" target="_blank">{{ saved.file.name }}</a></p>
+      {% endif %}
+      {% if saved.text %}
+      <h4>📝 Extracted Content</h4>
+      <pre>{{ saved.text|truncatechars:800 }}</pre>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+  <script src="{% static 'uploader/upload.js' %}"></script>
+</body>
+
+</html>

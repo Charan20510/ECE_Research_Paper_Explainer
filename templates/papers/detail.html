@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Paper Details</h2>
+<p><strong>Title:</strong> {{ paper.title }}</p>
+<p><strong>Uploaded:</strong> {{ paper.uploaded_at }}</p>
+<h3>Extracted Text</h3>
+<pre>{{ paper.extracted_text }}</pre>
+{% endblock %}
