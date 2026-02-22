@@ -81,5 +81,15 @@ README.md
 - The system runs on SQLite by default but can be pointed to PostgreSQL
   if needed.
 
-Once Stage 2 is requested, the text saved by this stage will be segmented and
-served through the same app.
+---
+
+## Stage 2 – Section Segmentation & Detection
+
+This implementation built the Section Segmentation Engine. This algorithm takes the extracted full text from Stage 1, parses it chronologically using rule-based Natural Language Processing (regex), and sorts it securely into structured JSON maps. 
+
+### Features implemented in Stage 2
+- **Rule-Based Mapping Model**: `papers/segmentation.py` built to accurately classify unstructured text into logical divisions: `abstract`, `introduction`, `literature_review`, `methodology`, `analysis`, `results`, `conclusion`, and `references`.
+- **Edge-Case Resilience**: The parser was thoroughly tested and handles Title case (`Related Work`), ALL CAPS (`III. METHODOLOGY`), Lowercase missing structure, implicit top-page abstracts, and trailing references blocks.
+- **Automated Pipeline**: When a PDF is uploaded, `detect_sections()` executes entirely in the backend `views.py` without touching frontend UX.
+- **Section Persistence**: Automatically generates and saves `sections.json` to the document repository under `extracted_content/<paper-name>/`.
+- **Unit Testing Suite**: `papers/tests.py` includes robust end-to-end unit tests confirming classification accuracy.
