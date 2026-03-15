@@ -22,7 +22,8 @@
         <div class="drop-content">
           <label class="btn" id="pick-file-label">
             📁 Browse & Upload
-            <input id="file-input" type="file" name="file" accept="application/pdf,image/*,.doc,.docx,.txt" hidden multiple>
+            <input id="file-input" type="file" name="file" accept="application/pdf,image/*,.doc,.docx,.txt" hidden
+              multiple>
           </label>
         </div>
         <div id="file-name" class="file-name" aria-live="polite"></div>
@@ -43,6 +44,14 @@
       {% if saved.file %}
       <p><strong>File:</strong> <a href="{{ saved.file.url }}" target="_blank">{{ saved.file.name }}</a></p>
       {% endif %}
+
+      <div style="margin: 20px 0;">
+        <a href="{% url 'papers:detail' saved.pk %}" class="btn btn-primary"
+          style="background-color: #28a745; text-decoration: none;">
+          ➡️ Take me to Explanation Engine
+        </a>
+      </div>
+
       {% if saved.text %}
       <h4>📝 Extracted Content</h4>
       <pre>{{ saved.text|truncatechars:800 }}</pre>

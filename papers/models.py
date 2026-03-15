@@ -26,3 +26,34 @@ class UploadedPaper(models.Model):
             import os
             self.title = os.path.basename(self.file.name)
         super().save(*args, **kwargs)
+
+
+class SectionExplanation(models.Model):
+    """
+    Stores the line-by-line structured explanations for a specific section of a paper.
+    
+    We use a JSONField to store the array of explanations to maintain a highly 
+    flexible and performant schema without creating thousands of individual
+    SentenceExplanation rows for a single paper.
+    """
+    paper = models.ForeignKey(UploadedPaper, on_delete=models.CASCADE, related_name='explanations')
+    section_name = models.CharField(max_length=100)
+    original_text = models.TextField()
+    
+    # Structure of JSON:
+    # [
+    #   {
+    #     "sentence": "Original sentence here",
+    #     "explanation": "Beginner friendly explanation",
+    #     "background_concepts": "Key theoretical concepts needed to understand this"
+    #   }, ...
+    # ]
+    explanations = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        # Prevent generating explanations for the exact same section twice
+        unique_together = ('paper', 'section_name')
+        
+    def __str__(self):
+        return f"{self.paper.title} - {self.section_name} Explanation"

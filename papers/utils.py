@@ -12,27 +12,22 @@ import re
 def extract_text_from_pdf(file_path: str) -> str:
     """Extracts raw text from a PDF located at file_path.
 
-    This function tries to use **pdfplumber** for extraction because the
-    previously used PyMuPDF (`fitz`) was causing DLL import problems on
-    Windows environments.  pdfplumber is pure-Python (with a small
-    `pdfminer.six` dependency) and tends to be more reliable during
-    development.
-
-    If pdfplumber is not available, we fall back to trying PyMuPDF just in
-    case the user has fixed the DLL issue; otherwise an informative
-    ImportError is raised.
+    This function uses **pdfminer.six** layout analysis for extraction because 
+    it natively reconstructs text from two-column research papers without interleaving
+    lines. It's much safer than generic horizontal extraction.
+    
+    If pdfminer is absolutely unavailable, it falls back to PyMuPDF.
     """
     try:
-        import pdfplumber
+        from pdfminer.high_level import extract_text
+        return extract_text(file_path)
     except ImportError:
         # try the old library as last resort
         try:
             import fitz  # PyMuPDF
         except ImportError as exc:
             raise ImportError(
-                "pdfplumber or PyMuPDF is required to extract text from PDFs. "
-                "Install with `pip install pdfplumber` (preferred) or "
-                "`pip install pymupdf`."
+                "pdfminer.six or PyMuPDF is required to extract text from PDFs. "
             ) from exc
         else:
             text_content = []
@@ -40,16 +35,6 @@ def extract_text_from_pdf(file_path: str) -> str:
                 for page in doc:
                     text_content.append(page.get_text())
             return "\n".join(text_content)
-
-    try:
-        # use pdfplumber path
-        text_content = []
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                # `extract_text()` may return None for empty pages
-                txt = page.extract_text() or ""
-                text_content.append(txt)
-        return "\n".join(text_content)
     except Exception as e:
         raise ValueError(f"Failed to read PDF file: {e}")
 
